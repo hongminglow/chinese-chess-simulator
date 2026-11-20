@@ -2,4 +2,7 @@ engine/pikafish.js
 engine/pikafish.wasm
 engine/pikafish.nnue
 engine/*.part
+engine/*.7z
+engine/*.exe
+engine/network-extract/
 __pycache__/
