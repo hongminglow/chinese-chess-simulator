@@ -3,3 +3,43 @@
 @media(max-width:920px){.layout{grid-template-columns:minmax(0,1fr) 290px;gap:30px;padding:28px 22px}.sidebar{padding-left:22px}}@media(max-width:700px){.topbar{height:60px;padding:0 16px}.session-pill{display:none}.layout{display:flex;flex-direction:column;padding:23px 14px;gap:25px}.sidebar{border-left:0;border-top:1px solid var(--line);padding:22px 0 0}.board-frame{margin-left:4px;margin-right:4px;border-width:6px;padding:7px}.board-wrap{width:100%}.game-heading{margin-bottom:17px}.game-heading h1{font-size:22px}.board-foot{font-size:9px}.coord{font-size:8px}.player-tag{height:36px}.history-list{height:180px}}
 .board-cell:nth-child(9n+1){background-image:none}.palace-lines{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;overflow:visible}.palace-lines path{fill:none;stroke:#755c3d;stroke-width:1.2;vector-effect:non-scaling-stroke}
 .board{background-image:none}
+
+/* Dark is the fresh-session default. The light palette remains available from the header toggle. */
+html[data-theme="dark"]{color-scheme:dark;--ink:#e6e9e1;--muted:#a1aaa1;--green:#22342a;--green2:#354d3e;--paper:#141a16;--line:#303a33;--red:#d16b53;--gold:#c79a58;--board:#735a3b;--board-deep:#59432d}
+html[data-theme="dark"] body{background:var(--paper);color:var(--ink)}
+html[data-theme="dark"] .topbar{background:#1b241e;border-color:var(--line)}
+html[data-theme="dark"] .brand{color:var(--ink)}
+html[data-theme="dark"] .session-pill,html[data-theme="dark"] .player-tag small,html[data-theme="dark"] .board-foot,html[data-theme="dark"] .section-title small,html[data-theme="dark"] .hint,html[data-theme="dark"] .side-footer{color:#9aa59b}
+html[data-theme="dark"] .icon-btn,html[data-theme="dark"] .theme-btn{background:#222e26;border-color:#3a493e;color:#dce2d8}
+html[data-theme="dark"] .theme-btn:hover,html[data-theme="dark"] .icon-btn:hover{background:#2b3a30;border-color:#536657}
+html[data-theme="dark"] .turn-indicator,html[data-theme="dark"] .setting-card,html[data-theme="dark"] .history-list{background:#1c251f;border-color:var(--line);color:var(--ink)}
+html[data-theme="dark"] .turn-indicator{color:#c2cbc1}
+html[data-theme="dark"] .board-frame{background:var(--board);border-color:#493923;box-shadow:0 5px 0 #392d1d,0 13px 25px #0005}
+html[data-theme="dark"] .board{background-color:var(--board)}
+html[data-theme="dark"] .palace-lines path{stroke:#d0b98e}
+html[data-theme="dark"] .river-label{color:#e0c696}
+html[data-theme="dark"] .player-tag b,html[data-theme="dark"] .side-head h2,html[data-theme="dark"] .section-title h3,html[data-theme="dark"] .setting-title b{color:var(--ink)}
+html[data-theme="dark"] .player-tag time{color:#d0d8ce}
+html[data-theme="dark"] .mode-tabs{background:#202a23}
+html[data-theme="dark"] .mode-tab{color:#a1aaa1}
+html[data-theme="dark"] .mode-tab.active{background:#35443a;color:#eef1e9;box-shadow:0 1px 4px #0004}
+html[data-theme="dark"] .setting-icon{background:#2b3329;color:#d1aa6d}
+html[data-theme="dark"] .timer-config{border-color:#303a33;color:#a1aaa1}
+html[data-theme="dark"] .timer-config select{background:#273129;color:#e3e9e0}
+html[data-theme="dark"] .palette-side button,html[data-theme="dark"] .palette-piece,html[data-theme="dark"] .subtle-btn{background:#232d26;border-color:#3a453c;color:#c5cec4}
+html[data-theme="dark"] .palette-side button.active,html[data-theme="dark"] .palette-piece.active{background:#3a3022;border-color:#bd9258;color:#e2c38e}
+html[data-theme="dark"] .subtle-btn:hover{background:#303c33}
+html[data-theme="dark"] .move-row{border-color:#303a33}
+html[data-theme="dark"] .move-no{color:#828e83}
+html[data-theme="dark"] .move-cell{color:#c1c9bf}
+html[data-theme="dark"] .move-cell.current{background:#3b3022;color:#e0b977}
+html[data-theme="dark"] .empty-state{color:#89958a}
+html[data-theme="dark"] .empty-state p{color:#c5cec4}
+html[data-theme="dark"] .thought-card{background:#25271f;border-color:#49402e}
+html[data-theme="dark"] .thought-head{color:#e1d6bd}
+html[data-theme="dark"] .thought-card p{color:#b5aa95}
+html[data-theme="dark"] .side-footer a{color:#a9bd9a}
+.theme-btn{display:flex;align-items:center;gap:7px;border:1px solid var(--line);border-radius:8px;background:#fff;padding:8px 11px;color:#48584c;font:500 12px 'DM Sans',sans-serif;cursor:pointer;transition:background .15s,border-color .15s}
+.theme-btn:hover{background:#f4f5f0;border-color:#cbd1c9}
+.theme-glyph{font-size:15px;line-height:1}
+@media(max-width:700px){.topbar-right{gap:8px}.theme-btn{padding:7px 8px}}
