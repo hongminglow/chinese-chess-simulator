@@ -161,8 +161,47 @@
     return state.enginePromise;
   }
   function searchWithPikafish(gameId){return startPikafish().then(()=>{if(gameId!==state.gameId||!state.busy)return null;return new Promise((resolve,reject)=>{state.engineBestmove=resolve;state.engineFailure=reject;state.engineInfo=null;state.engineDiagnostic='';state.engineStartedAt=Date.now();state.engineWorker.postMessage({type:'command',command:`position fen ${boardFen(state.board,state.turn)}`});state.engineWorker.postMessage({type:'command',command:'go movetime 1800'});setTimeout(()=>{if(state.engineBestmove===resolve){const detail=state.engineDiagnostic?`：${state.engineDiagnostic}`:'';failEngine(new Error(`Pikafish 搜索超时${detail}`),reject);}},12000);});});}
-  function pvChinese(before,pv){const pos=clone(before),out=[];let side='b';for(const token of (pv||'').split(/\s+/).slice(0,6)){const m=parseUciMove(token);if(!m)break;const p=pos[m.fy]?.[m.fx];if(!p||p.side!==side)break;const legal=legalMoves(pos,side).find(x=>x.fx===m.fx&&x.fy===m.fy&&x.tx===m.tx&&x.ty===m.ty);if(!legal)break;const captured=pos[m.ty][m.tx];out.push(notation(pos,m,p,captured));apply(pos,m);side=side==='r'?'b':'r';}return out.join(' ');}
-  function engineThought(before,m,p,captured,givesCheck,info){const facts=[];if(captured)facts.push(`吃掉${pieceText(captured)}`);if(givesCheck)facts.push('形成将军');const line=pvChinese(before,info?.pv);const score=info?.mate!==null&&info?.mate!==undefined?`将杀距离 ${info.mate} 手`:`评估 ${info?.scoreCp===null||info?.scoreCp===undefined?'未知':`${info.scoreCp>0?'+':''}${info.scoreCp} cp`}`;return`Pikafish 选择${notation(before,m,p,captured)}，搜索深度 ${info?.depth||'未知'}，${score}。${facts.length?`棋步特点：${facts.join('、')}。`:''}${line?`引擎主变化：${line}。`:''}评估和主线来自引擎；棋理解释可结合复盘码再核验。`;}
+  function pvChinese(before,pv,rootMove){
+    const pos=clone(before),tokens=(pv||'').trim().split(/\s+/).filter(Boolean),out=[];
+    const first=parseUciMove(tokens[0]);
+    if(!first||first.fx!==rootMove.fx||first.fy!==rootMove.fy||first.tx!==rootMove.tx||first.ty!==rootMove.ty)return'';
+    apply(pos,rootMove);
+    let side='r';
+    for(const token of tokens.slice(1,5)){
+      const move=parseUciMove(token);if(!move)break;
+      const piece=pos[move.fy]?.[move.fx];if(!piece||piece.side!==side)break;
+      const legal=legalMoves(pos,side).find(candidate=>candidate.fx===move.fx&&candidate.fy===move.fy&&candidate.tx===move.tx&&candidate.ty===move.ty);if(!legal)break;
+      out.push(notation(pos,move,piece,pos[move.ty][move.tx]));apply(pos,move);side=side==='r'?'b':'r';
+    }
+    return out.join(' ');
+  }
+  function engineTacticalFacts(before,after,m,p,captured,givesCheck){
+    const facts=[];
+    if(captured)facts.push(`吃掉${pieceText(captured)}`);
+    if(givesCheck)facts.push('将军，红方必须先处理将帅安全');
+
+    const oldThreats=new Set(legalMoves(before,'b').filter(move=>before[move.ty][move.tx]?.side==='r').map(move=>`${move.tx},${move.ty}`));
+    const newTargets=legalMoves(after,'b')
+      .filter(move=>after[move.ty][move.tx]?.side==='r'&&VALUES[after[move.ty][move.tx].type]>=450&&!oldThreats.has(`${move.tx},${move.ty}`))
+      .sort((a,b)=>VALUES[after[b.ty][b.tx].type]-VALUES[after[a.ty][a.tx].type]);
+    if(newTargets.length){const target=after[newTargets[0].ty][newTargets[0].tx];facts.push(`新增对${pieceText(target)}的攻击，给对方该子施压`);}
+
+    if(!captured&&legalMoves(before,'r').some(move=>move.tx===m.fx&&move.ty===m.fy))facts.push(`${pieceText(p)}撤离了红方原本可以直接攻击的位置`);
+    const movedPiece=after[m.ty][m.tx];
+    if(movedPiece&&legalMoves(after,'r').some(move=>move.tx===m.tx&&move.ty===m.ty))facts.push(`注意：红方有合法着法可以吃掉这枚${pieceText(movedPiece)}`);
+    return facts;
+  }
+  function engineThought(before,m,p,captured,givesCheck,info){
+    const after=clone(before);apply(after,m);
+    const facts=engineTacticalFacts(before,after,m,p,captured,givesCheck);
+    const line=pvChinese(before,info?.pv,m);
+    const score=info?.mate!==null&&info?.mate!==undefined?`将杀距离 ${info.mate} 手`:`${info?.scoreCp===null||info?.scoreCp===undefined?'未知':`${info.scoreCp>0?'+':''}${info.scoreCp} cp`}`;
+    const parts=[];
+    if(facts.length)parts.push(`可验证的局面影响：${facts.join('；')}`);
+    if(line)parts.push(`引擎预测主线：${line}`);
+    parts.push(`搜索深度 ${info?.depth||'未知'}，局面评估 ${score}`);
+    return`${parts.join('。')}。`;
+  }
   function finishAIMove(m,info,gameId){if(gameId!==state.gameId||!state.busy)return;const before=clone(state.board),p=before[m.fy][m.fx],captured=before[m.ty][m.tx];if(!p||p.side!=='b'){state.busy=false;render();return;}apply(state.board,m);const givesCheck=inCheck(state.board,'r'),note=notation(before,m,p,captured),engineInfo=info?{name:'Pikafish',depth:info.depth||0,scoreCp:info.scoreCp,mate:info.mate,pv:info.pv||''}:null;if(info){state.engineError=null;engineStatus('就绪 · Pikafish 强力引擎');}const rec={kind:'move',before,after:clone(state.board),side:'b',note,captured,from:{x:m.fx,y:m.fy},to:{x:m.tx,y:m.ty},thought:info?engineThought(before,m,p,captured,givesCheck,info):explainMove(before,m,p,captured,givesCheck,undefined),engineInfo};state.history.push(rec);state.last={from:rec.from,to:rec.to};$('thoughtText').textContent=rec.thought;state.turn='r';state.busy=false;settlePosition();render();}
   function fallbackSearchMove(gameId){setTimeout(()=>{if(gameId!==state.gameId||!state.busy)return;const moves=legalMoves(state.board,'b');if(!moves.length){state.busy=false;settlePosition();render();return;}let best=-Infinity,candidates=[];for(const m of moves){const next=clone(state.board),captured=next[m.ty][m.tx],p={...next[m.fy][m.fx]};apply(next,m);const score=-search(next,'r',2,-Infinity,Infinity,1);if(score>best){best=score;candidates=[{m,score,captured,p}];}else if(score===best)candidates.push({m,score,captured,p});}const choice=candidates[Math.floor(Math.random()*Math.min(candidates.length,2))];finishAIMove(choice.m,null,gameId);},30);}
   async function aiTurn(){if(state.mode!=='ai'||state.turn!=='b'||state.ended)return;state.busy=true;const gameId=state.gameId;render();try{const result=await searchWithPikafish(gameId);if(!result||gameId!==state.gameId||!state.busy)return;const m=parseUciMove(result.move);if(!m||!legalMoves(state.board,'b').some(q=>q.fx===m.fx&&q.fy===m.fy&&q.tx===m.tx&&q.ty===m.ty))throw new Error(`引擎返回了无法识别的走法：${result.move}`);finishAIMove(m,result.info,gameId);}catch(error){if(gameId!==state.gameId||!state.busy)return;state.engineError=error.message||String(error);engineStatus(`改用本地备用搜索 · ${state.engineError}`);toast('Pikafish 暂不可用，当前使用较弱的本地备用 AI');fallbackSearchMove(gameId);}}
