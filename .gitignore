@@ -1,0 +1,5 @@
+engine/pikafish.js
+engine/pikafish.wasm
+engine/pikafish.nnue
+engine/*.part
+__pycache__/

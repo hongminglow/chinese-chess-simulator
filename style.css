@@ -43,4 +43,6 @@ html[data-theme="dark"] .side-footer a{color:#a9bd9a}
 .theme-btn:hover{background:#f4f5f0;border-color:#cbd1c9}
 .theme-glyph{font-size:15px;line-height:1}
 .history-actions{display:flex;align-items:center;gap:11px}
+.engine-status{margin-top:8px;color:#9b8e77;font:9px 'DM Mono',monospace}
 @media(max-width:700px){.topbar-right{gap:8px}.theme-btn{padding:7px 8px}}
+html[data-theme="dark"] .engine-status{color:#bdad90}
