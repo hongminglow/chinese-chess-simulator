@@ -9,7 +9,7 @@ from fetch_engine_assets import ENGINE_DIR, ensure_assets
 
 ROOT = Path(__file__).resolve().parent
 OUTPUT = ROOT / "dist"
-APP_FILES = ("index.html", "style.css", "app.js")
+APP_FILES = ("index.html", "style.css", "app.js", "favicon.svg")
 ENGINE_FILES = (
     "worker.js",
     "pikafish.js",
