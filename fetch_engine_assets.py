@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import hashlib
+import shutil
 import subprocess
 import sys
 import urllib.request
@@ -71,8 +72,13 @@ def ensure_matching_network() -> None:
     archive = ENGINE_DIR / "pikafish-2026-09-06.7z"
     download(archive.name, NETWORK_PACKAGE, NETWORK_PACKAGE_SHA256)
     print("从官方 Pikafish 2026-09-06 发行包提取匹配的 NNUE…")
+    # Vercel's Linux build image provides bsdtar for 7z archives. On Windows,
+    # `tar` is commonly provided by libarchive and can read the same format.
+    archive_tool = shutil.which("bsdtar") or shutil.which("tar")
+    if not archive_tool:
+        raise RuntimeError("未找到支持 7z 格式的 bsdtar/tar，无法提取 NNUE")
     listing = subprocess.run(
-        ["tar", "-tf", str(archive)], check=True, capture_output=True, text=True
+        [archive_tool, "-tf", str(archive)], check=True, capture_output=True, text=True
     ).stdout.splitlines()
     members = [
         member for member in listing
@@ -86,7 +92,7 @@ def ensure_matching_network() -> None:
     extracted.mkdir(exist_ok=True)
     try:
         subprocess.run(
-            ["tar", "-xf", str(archive), "-C", str(extracted), members[0]],
+            [archive_tool, "-xf", str(archive), "-C", str(extracted), members[0]],
             check=True,
             capture_output=True,
             text=True,
