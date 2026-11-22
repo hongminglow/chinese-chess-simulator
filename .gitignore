@@ -6,3 +6,4 @@ engine/*.7z
 engine/*.exe
 engine/network-extract/
 __pycache__/
+dist/
